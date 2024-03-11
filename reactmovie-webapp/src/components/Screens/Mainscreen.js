@@ -193,7 +193,8 @@ export default function MiniDrawer() {
 
   const [showCard, setShowCard] = useState(false);
   const [editingRowId, setEditingRowId] = useState(null);
-  const [tooltipData, setTooltipData] = useState(null);
+  const [tooltipData, setTooltipData] = useState([]);
+  const[tooltipContent,setTooltipContent]=useState(null);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [editRowsModel, setEditRowsModel] = useState({});
   const [updatedMovie, setUpdatedMovie] = useState({});
@@ -448,16 +449,18 @@ export default function MiniDrawer() {
     },
   ];
 
+ 
   const fetchDataFromApi = async (id) => {
     try {
       const response = await axios.post(
-        `http://localhost:5000/fetchCardDetails/${id}`
-      );
-      if (response.status === 200) {
+        `http://localhost:5000/fetchCardDetails/${id}`);
         
-        console.log("Fetched details!");
+        if (response.status === 200) {
+        
+        console.log('Axios Response:', response);
+        setTooltipData(response.data);
       } else {
-        console.error("Unexpected response status:", response.status);
+        console.error('Unexpected status code:', response.status);
       }
     } catch (error) {
       console.log("Error in fetching data!!:", error);
@@ -469,24 +472,31 @@ export default function MiniDrawer() {
   }, []);
 
   
+  // const handleRowClickOn = async (params) => {
+  //   const id = params.row.id;
+  //   console.log('Cell clicked. Row data:', params.row);
+  //   fetchDataFromApi(id);
+  //   console.log('Id selected is:',params.id);
+  // };
 
-  const handleHoverIn = (id) => {
-    try {
-      console.log(`Hovering on row:&{id}`);
-      setHoveredRow(id);
-    } catch (error) {
-      console.log("Error fetching actor details:", error);
-    }
+  const handleRowClick = async (params) => {
+    const movieId = params.row.film_id;  // Assuming 'film_id' is the primary key
+    console.log('Row clicked. Fetching data for ID:', movieId);
+    fetchDataFromApi(movieId);
   };
 
-  const handleHoverOut = () => {
-    setHoveredRow(null);
-    setTooltipData(null);
-  };
+  // const handleRowClick = async (params) => {
+  //   const filmId = params.row.film_id;
+  //   const rowId = params.row.id;  
+  
+  //   console.log('Row clicked. Fetching data for Film ID:', filmId, 'and Row ID:', rowId);
+  //   fetchDataFromApi(filmId, rowId);
+  // };
+  
 
-  useEffect(() => {
-    fetchDataFromApi();
-  }, []);
+  const handleRowClickOut = () => {
+    setTooltipContent(null);
+  };
 
   const handleSelectedMovies = (keyId) => {
     const selectedMovie = movies.find((movie) => movie.imdbID === keyId);
@@ -688,8 +698,17 @@ export default function MiniDrawer() {
                     params.props.value
                   )
                 }
+                onCellClick={handleRowClick}
               />
-              <ClickAwayListener onClickAway={handleHoverOut}>
+              {tooltipData && (
+                <Tooltip title={`Data from API: ${JSON.stringify(tooltipData)}`}>
+                  <div>
+                    <tooltipContent/>
+                  </div>
+
+                </Tooltip>
+              )}
+              {/* <ClickAwayListener onClickAway={handleHoverOut}>
                 <div>
                   {movies.map((movie) => (
                     <Tooltip
@@ -705,7 +724,7 @@ export default function MiniDrawer() {
                     </Tooltip>
                   ))}
                 </div>
-              </ClickAwayListener>
+              </ClickAwayListener> */}
             </div>
           </ThemeProvider>
         </div>
